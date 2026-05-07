@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package booking;
+
+// กำหนดที่อยู่ของไฟล์ Go ที่จะถูกสร้างขึ้น
+option go_package = "./pb";
+
+// 1. กำหนดโครงสร้างข้อมูล (Message)
+message Room {
+  string id = 1;
+  string name = 2;
+  int32 capacity = 3;
+}
+
+message ReservationRequest {
+  string room_id = 1;
+  string user_id = 2;
+  string time_slot = 3; // เช่น "09:30-11:00"
+  string date = 4;      // จองล่วงหน้าไม่เกิน 7 วัน
+}
+
+message ReservationResponse {
+  string reservation_id = 1;
+  string status = 2;    // "pending" ตามกฎของคุณ [cite: 7, 8]
+  string message = 3;
+}
+
+//login
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string role = 2; // "student", "teacher", หรือ "staff" ตามที่คุณออกแบบไว้
+}
+
+// 2. กำหนดบริการ (Service) หรือ API Endpoint
+service BookingService {
+  // นี่คือตัวแทนของ POST /api/auth/login
+  rpc Login (LoginRequest) returns (LoginResponse); 
+  // เทียบเท่า GET /api/rooms
+  rpc GetRooms (Empty) returns (RoomList);
+  
+  // เทียบเท่า POST /api/reservations
+  rpc CreateReservation (ReservationRequest) returns (ReservationResponse);
+}
+
+message Empty {}
+message RoomList {
+  repeated Room rooms = 1;
+
+}
