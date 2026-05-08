@@ -126,6 +126,63 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 	}, nil
 }
 
+//ฟังก์ชันดึงข้อมูลของห้องมา
+func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleRequest) (*pb.RoomScheduleResponse, error) {
+	// กำหนด time slots ทั้งหมดที่มีในระบบ
+	allSlots := []string{
+		"08:00-09:30",
+		"09:30-11:00",
+		"11:00-12:30",
+		"13:00-14:30",
+		"14:30-16:00",
+		"16:00-17:30",
+	}
+
+	// Query ดึง reservations ของห้องนี้ในวันที่ระบุ
+	rows, err := db.Query(
+		"SELECT time_slot, user_id FROM reservations WHERE room_id = ? AND date = ?",
+		req.RoomId, req.Date,
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "query error: %v", err)
+	}
+	defer rows.Close()
+
+	// สร้าง map เพื่อ lookup ว่า slot ไหนถูกจองแล้ว
+	bookedMap := make(map[string]string) // time_slot -> user_id
+	for rows.Next() {
+		var timeSlot, userID string
+		if err := rows.Scan(&timeSlot, &userID); err != nil {
+			return nil, status.Errorf(codes.Internal, "scan error: %v", err)
+		}
+		bookedMap[timeSlot] = userID
+	}
+
+	// สร้าง response slots
+	var slots []*pb.ScheduleSlot
+	for _, slot := range allSlots {
+		if userID, booked := bookedMap[slot]; booked {
+			slots = append(slots, &pb.ScheduleSlot{
+				TimeSlot: slot,
+				Status:   "booked",
+				BookedBy: userID,
+			})
+		} else {
+			slots = append(slots, &pb.ScheduleSlot{
+				TimeSlot: slot,
+				Status:   "available",
+				BookedBy: "",
+			})
+		}
+	}
+
+	return &pb.RoomScheduleResponse{
+		RoomId: req.RoomId,
+		Date:   req.Date,
+		Slots:  slots,
+	}, nil
+}
+
 func main() {
 	// --- ส่วนที่เพิ่มเข้ามา ---
 	// เรียกใช้ฟังก์ชันเชื่อมต่อ Database จากไฟล์ database.go

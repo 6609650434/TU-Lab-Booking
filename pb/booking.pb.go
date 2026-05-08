@@ -266,7 +266,7 @@ func (x *LoginRequest) GetPassword() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	Role          string                 `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"` // "student", "teacher", หรือ "staff" ตามที่คุณออกแบบไว้
+	Role          string                 `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"` // "student", "teacher", หรือ "staff" ตามที่ออกแบบไว้
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -315,6 +315,178 @@ func (x *LoginResponse) GetRole() string {
 	return ""
 }
 
+type GetRoomScheduleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RoomId        string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"` // format: "2026-05-08"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetRoomScheduleRequest) Reset() {
+	*x = GetRoomScheduleRequest{}
+	mi := &file_proto_booking_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRoomScheduleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRoomScheduleRequest) ProtoMessage() {}
+
+func (x *GetRoomScheduleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_booking_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRoomScheduleRequest.ProtoReflect.Descriptor instead.
+func (*GetRoomScheduleRequest) Descriptor() ([]byte, []int) {
+	return file_proto_booking_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetRoomScheduleRequest) GetRoomId() string {
+	if x != nil {
+		return x.RoomId
+	}
+	return ""
+}
+
+func (x *GetRoomScheduleRequest) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+type ScheduleSlot struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TimeSlot      string                 `protobuf:"bytes,1,opt,name=time_slot,json=timeSlot,proto3" json:"time_slot,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                     // "available" หรือ "booked"
+	BookedBy      string                 `protobuf:"bytes,3,opt,name=booked_by,json=bookedBy,proto3" json:"booked_by,omitempty"` // user_id ถ้า booked, ว่างถ้า available
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ScheduleSlot) Reset() {
+	*x = ScheduleSlot{}
+	mi := &file_proto_booking_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ScheduleSlot) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ScheduleSlot) ProtoMessage() {}
+
+func (x *ScheduleSlot) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_booking_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ScheduleSlot.ProtoReflect.Descriptor instead.
+func (*ScheduleSlot) Descriptor() ([]byte, []int) {
+	return file_proto_booking_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ScheduleSlot) GetTimeSlot() string {
+	if x != nil {
+		return x.TimeSlot
+	}
+	return ""
+}
+
+func (x *ScheduleSlot) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *ScheduleSlot) GetBookedBy() string {
+	if x != nil {
+		return x.BookedBy
+	}
+	return ""
+}
+
+type RoomScheduleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RoomId        string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`
+	Slots         []*ScheduleSlot        `protobuf:"bytes,3,rep,name=slots,proto3" json:"slots,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RoomScheduleResponse) Reset() {
+	*x = RoomScheduleResponse{}
+	mi := &file_proto_booking_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoomScheduleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoomScheduleResponse) ProtoMessage() {}
+
+func (x *RoomScheduleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_booking_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoomScheduleResponse.ProtoReflect.Descriptor instead.
+func (*RoomScheduleResponse) Descriptor() ([]byte, []int) {
+	return file_proto_booking_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RoomScheduleResponse) GetRoomId() string {
+	if x != nil {
+		return x.RoomId
+	}
+	return ""
+}
+
+func (x *RoomScheduleResponse) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *RoomScheduleResponse) GetSlots() []*ScheduleSlot {
+	if x != nil {
+		return x.Slots
+	}
+	return nil
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -323,7 +495,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_proto_booking_proto_msgTypes[5]
+	mi := &file_proto_booking_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -335,7 +507,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_booking_proto_msgTypes[5]
+	mi := &file_proto_booking_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -348,7 +520,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_proto_booking_proto_rawDescGZIP(), []int{5}
+	return file_proto_booking_proto_rawDescGZIP(), []int{8}
 }
 
 type RoomList struct {
@@ -360,7 +532,7 @@ type RoomList struct {
 
 func (x *RoomList) Reset() {
 	*x = RoomList{}
-	mi := &file_proto_booking_proto_msgTypes[6]
+	mi := &file_proto_booking_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -372,7 +544,7 @@ func (x *RoomList) String() string {
 func (*RoomList) ProtoMessage() {}
 
 func (x *RoomList) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_booking_proto_msgTypes[6]
+	mi := &file_proto_booking_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -385,7 +557,7 @@ func (x *RoomList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoomList.ProtoReflect.Descriptor instead.
 func (*RoomList) Descriptor() ([]byte, []int) {
-	return file_proto_booking_proto_rawDescGZIP(), []int{6}
+	return file_proto_booking_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *RoomList) GetRooms() []*Room {
@@ -418,14 +590,26 @@ const file_proto_booking_proto_rawDesc = "" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"F\n" +
 	"\rLoginResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12\x12\n" +
-	"\x04role\x18\x02 \x01(\tR\x04role\"\a\n" +
+	"\x04role\x18\x02 \x01(\tR\x04role\"E\n" +
+	"\x16GetRoomScheduleRequest\x12\x17\n" +
+	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x12\n" +
+	"\x04date\x18\x02 \x01(\tR\x04date\"`\n" +
+	"\fScheduleSlot\x12\x1b\n" +
+	"\ttime_slot\x18\x01 \x01(\tR\btimeSlot\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1b\n" +
+	"\tbooked_by\x18\x03 \x01(\tR\bbookedBy\"p\n" +
+	"\x14RoomScheduleResponse\x12\x17\n" +
+	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x12\n" +
+	"\x04date\x18\x02 \x01(\tR\x04date\x12+\n" +
+	"\x05slots\x18\x03 \x03(\v2\x15.booking.ScheduleSlotR\x05slots\"\a\n" +
 	"\x05Empty\"/\n" +
 	"\bRoomList\x12#\n" +
-	"\x05rooms\x18\x01 \x03(\v2\r.booking.RoomR\x05rooms2\xc7\x01\n" +
+	"\x05rooms\x18\x01 \x03(\v2\r.booking.RoomR\x05rooms2\x9a\x02\n" +
 	"\x0eBookingService\x126\n" +
 	"\x05Login\x12\x15.booking.LoginRequest\x1a\x16.booking.LoginResponse\x12-\n" +
 	"\bGetRooms\x12\x0e.booking.Empty\x1a\x11.booking.RoomList\x12N\n" +
-	"\x11CreateReservation\x12\x1b.booking.ReservationRequest\x1a\x1c.booking.ReservationResponseB\x06Z\x04./pbb\x06proto3"
+	"\x11CreateReservation\x12\x1b.booking.ReservationRequest\x1a\x1c.booking.ReservationResponse\x12Q\n" +
+	"\x0fGetRoomSchedule\x12\x1f.booking.GetRoomScheduleRequest\x1a\x1d.booking.RoomScheduleResponseB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_proto_booking_proto_rawDescOnce sync.Once
@@ -439,29 +623,35 @@ func file_proto_booking_proto_rawDescGZIP() []byte {
 	return file_proto_booking_proto_rawDescData
 }
 
-var file_proto_booking_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_proto_booking_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_proto_booking_proto_goTypes = []any{
-	(*Room)(nil),                // 0: booking.Room
-	(*ReservationRequest)(nil),  // 1: booking.ReservationRequest
-	(*ReservationResponse)(nil), // 2: booking.ReservationResponse
-	(*LoginRequest)(nil),        // 3: booking.LoginRequest
-	(*LoginResponse)(nil),       // 4: booking.LoginResponse
-	(*Empty)(nil),               // 5: booking.Empty
-	(*RoomList)(nil),            // 6: booking.RoomList
+	(*Room)(nil),                   // 0: booking.Room
+	(*ReservationRequest)(nil),     // 1: booking.ReservationRequest
+	(*ReservationResponse)(nil),    // 2: booking.ReservationResponse
+	(*LoginRequest)(nil),           // 3: booking.LoginRequest
+	(*LoginResponse)(nil),          // 4: booking.LoginResponse
+	(*GetRoomScheduleRequest)(nil), // 5: booking.GetRoomScheduleRequest
+	(*ScheduleSlot)(nil),           // 6: booking.ScheduleSlot
+	(*RoomScheduleResponse)(nil),   // 7: booking.RoomScheduleResponse
+	(*Empty)(nil),                  // 8: booking.Empty
+	(*RoomList)(nil),               // 9: booking.RoomList
 }
 var file_proto_booking_proto_depIdxs = []int32{
-	0, // 0: booking.RoomList.rooms:type_name -> booking.Room
-	3, // 1: booking.BookingService.Login:input_type -> booking.LoginRequest
-	5, // 2: booking.BookingService.GetRooms:input_type -> booking.Empty
-	1, // 3: booking.BookingService.CreateReservation:input_type -> booking.ReservationRequest
-	4, // 4: booking.BookingService.Login:output_type -> booking.LoginResponse
-	6, // 5: booking.BookingService.GetRooms:output_type -> booking.RoomList
-	2, // 6: booking.BookingService.CreateReservation:output_type -> booking.ReservationResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	6, // 0: booking.RoomScheduleResponse.slots:type_name -> booking.ScheduleSlot
+	0, // 1: booking.RoomList.rooms:type_name -> booking.Room
+	3, // 2: booking.BookingService.Login:input_type -> booking.LoginRequest
+	8, // 3: booking.BookingService.GetRooms:input_type -> booking.Empty
+	1, // 4: booking.BookingService.CreateReservation:input_type -> booking.ReservationRequest
+	5, // 5: booking.BookingService.GetRoomSchedule:input_type -> booking.GetRoomScheduleRequest
+	4, // 6: booking.BookingService.Login:output_type -> booking.LoginResponse
+	9, // 7: booking.BookingService.GetRooms:output_type -> booking.RoomList
+	2, // 8: booking.BookingService.CreateReservation:output_type -> booking.ReservationResponse
+	7, // 9: booking.BookingService.GetRoomSchedule:output_type -> booking.RoomScheduleResponse
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_booking_proto_init() }
@@ -475,7 +665,7 @@ func file_proto_booking_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_booking_proto_rawDesc), len(file_proto_booking_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

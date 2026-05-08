@@ -32,6 +32,21 @@ func initDB() {
 		log.Fatal(err)
 	}
 
+	// สร้างตาราง reservations
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS reservations (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		room_id TEXT NOT NULL,
+		user_id TEXT NOT NULL,
+		time_slot TEXT NOT NULL,
+		date TEXT NOT NULL,
+		status TEXT DEFAULT 'pending'
+	);`)
+	
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// สร้าง User ตัวอย่างสำหรับทดสอบ (เฉพาะถ้ายังไม่มี)
 	setupMockUser("student001", "password123", "student")
 }
