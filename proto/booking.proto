@@ -33,7 +33,24 @@ message LoginRequest {
 
 message LoginResponse {
   string access_token = 1;
-  string role = 2; // "student", "teacher", หรือ "staff" ตามที่คุณออกแบบไว้
+  string role = 2; // "student", "teacher", หรือ "staff" ตามที่ออกแบบไว้
+}
+
+message GetRoomScheduleRequest {
+  string room_id = 1;
+  string date = 2; // format: "2026-05-08"
+}
+
+message ScheduleSlot {
+  string time_slot = 1;
+  string status = 2;    // "available" หรือ "booked"
+  string booked_by = 3; // user_id ถ้า booked, ว่างถ้า available
+}
+
+message RoomScheduleResponse {
+  string room_id = 1;
+  string date = 2;
+  repeated ScheduleSlot slots = 3;
 }
 
 // 2. กำหนดบริการ (Service) หรือ API Endpoint
@@ -45,6 +62,8 @@ service BookingService {
   
   // เทียบเท่า POST /api/reservations
   rpc CreateReservation (ReservationRequest) returns (ReservationResponse);
+
+  rpc GetRoomSchedule (GetRoomScheduleRequest) returns (RoomScheduleResponse);
 }
 
 message Empty {}
