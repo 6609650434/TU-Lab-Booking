@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -126,7 +127,7 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 	}, nil
 }
 
-//ฟังก์ชันดึงข้อมูลของห้องมา
+// ฟังก์ชันดึงข้อมูลของห้องมา
 func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleRequest) (*pb.RoomScheduleResponse, error) {
 	// กำหนด time slots ทั้งหมดที่มีในระบบ
 	allSlots := []string{
@@ -180,6 +181,53 @@ func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleReq
 		RoomId: req.RoomId,
 		Date:   req.Date,
 		Slots:  slots,
+	}, nil
+}
+
+// ฟังก์ชันดูประวัติการจองของตนเอง
+func (s *server) GetMyReservations(ctx context.Context, req *pb.Empty) (*pb.MyReservationsResponse, error) {
+	userID, ok := ctx.Value("username").(string)
+	if !ok || userID == "" {
+		return nil, status.Error(codes.Unauthenticated, "ไม่พบข้อมูลผู้ใช้จาก token")
+	}
+
+	rows, err := db.Query(`
+		SELECT id, room_id, date, time_slot, status
+		FROM reservations
+		WHERE user_id = ?
+		ORDER BY date DESC, time_slot ASC
+	`, userID)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "ไม่สามารถดึงประวัติการจองได้: %v", err)
+	}
+	defer rows.Close()
+
+	var reservations []*pb.MyReservation
+
+	for rows.Next() {
+		var id int
+		var roomID string
+		var date string
+		var timeSlot string
+		var reservationStatus string
+
+		err := rows.Scan(&id, &roomID, &date, &timeSlot, &reservationStatus)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "อ่านข้อมูลประวัติการจองผิดพลาด: %v", err)
+		}
+
+		reservations = append(reservations, &pb.MyReservation{
+			ReservationId: fmt.Sprintf("%d", id),
+			RoomId:        roomID,
+			Date:          date,
+			TimeSlot:      timeSlot,
+			Status:        reservationStatus,
+		})
+	}
+
+	return &pb.MyReservationsResponse{
+		Reservations: reservations,
 	}, nil
 }
 
