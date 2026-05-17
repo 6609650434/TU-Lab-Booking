@@ -126,7 +126,7 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 	}, nil
 }
 
-//ฟังก์ชันดึงข้อมูลของห้องมา
+// ฟังก์ชันดึงข้อมูลของห้องมา
 func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleRequest) (*pb.RoomScheduleResponse, error) {
 	// กำหนด time slots ทั้งหมดที่มีในระบบ
 	allSlots := []string{
@@ -180,6 +180,105 @@ func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleReq
 		RoomId: req.RoomId,
 		Date:   req.Date,
 		Slots:  slots,
+	}, nil
+}
+
+// ฟังก์ชันสำหรับจองห้อง
+func (s *server) CreateReservation(ctx context.Context, req *pb.ReservationRequest) (*pb.ReservationResponse, error) {
+
+	// ดึง username จาก JWT Token
+	usernameValue := ctx.Value("username")
+	if usernameValue == nil {
+		return nil, status.Errorf(
+			codes.Unauthenticated,
+			"ไม่พบข้อมูลผู้ใช้งานจาก Token",
+		)
+	}
+
+	username, ok := usernameValue.(string)
+	if !ok || username == "" {
+		return nil, status.Errorf(
+			codes.Unauthenticated,
+			"ข้อมูลผู้ใช้งานจาก Token ไม่ถูกต้อง",
+		)
+	}
+
+	// ตรวจสอบข้อมูลที่ส่งเข้ามา
+	if req.RoomId <= 0 {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"กรุณาระบุ room_id ให้ถูกต้อง",
+		)
+	}
+
+	if req.Date == "" {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"กรุณาระบุ date",
+		)
+	}
+
+	if req.TimeSlot == "" {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"กรุณาระบุ time_slot",
+		)
+	}
+
+	// เช็กว่าห้องถูกจองแล้วหรือยัง
+	var count int
+
+	err := db.QueryRow(
+		`SELECT COUNT(*)
+		 FROM reservations
+		 WHERE room_id = ?
+		 AND date = ?
+		 AND time_slot = ?`,
+		req.RoomId,
+		req.Date,
+		req.TimeSlot,
+	).Scan(&count)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"database error: %v",
+			err,
+		)
+	}
+
+	// ถ้ามีการจองแล้ว
+	if count > 0 {
+		return nil, status.Errorf(
+			codes.AlreadyExists,
+			"ห้องถูกจองแล้ว",
+		)
+	}
+
+	// บันทึกข้อมูลลง database
+	_, err = db.Exec(
+		`INSERT INTO reservations
+		(room_id, user_id, date, time_slot)
+		VALUES (?, ?, ?, ?)`,
+		req.RoomId,
+		username,
+		req.Date,
+		req.TimeSlot,
+	)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"insert error: %v",
+			err,
+		)
+	}
+
+	// ส่ง response กลับ
+	return &pb.ReservationResponse{
+		ReservationId: "RESERVED",
+		Status:        "pending",
+		Message:       "จองห้องสำเร็จ",
 	}, nil
 }
 
