@@ -64,10 +64,22 @@ service BookingService {
   rpc CreateReservation (ReservationRequest) returns (ReservationResponse);
 
   rpc GetRoomSchedule (GetRoomScheduleRequest) returns (RoomScheduleResponse);
+
+  rpc CancelReservation (CancelReservationRequest) returns (CancelReservationResponse);
 }
 
 message Empty {}
 message RoomList {
   repeated Room rooms = 1;
 
+}
+
+message CancelReservationRequest {
+  string reservation_id = 1;
+  string user_id = 2;
+}
+
+message CancelReservationResponse {
+  bool success = 1;
+  string message = 2;
 }

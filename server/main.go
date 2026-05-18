@@ -126,7 +126,7 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 	}, nil
 }
 
-//ฟังก์ชันดึงข้อมูลของห้องมา
+// ฟังก์ชันดึงข้อมูลของห้องมา
 func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleRequest) (*pb.RoomScheduleResponse, error) {
 	// กำหนด time slots ทั้งหมดที่มีในระบบ
 	allSlots := []string{
@@ -205,4 +205,50 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func (s *server) CancelReservation(ctx context.Context, req *pb.CancelReservationRequest) (*pb.CancelReservationResponse, error) {
+
+	username := ctx.Value("username").(string)
+
+	var owner string
+
+	err := db.QueryRow(
+		"SELECT user_id FROM reservations WHERE id = ?",
+		req.ReservationId,
+	).Scan(&owner)
+
+	if err == sql.ErrNoRows {
+		return &pb.CancelReservationResponse{
+			Success: false,
+			Message: "Reservation not found",
+		}, nil
+	}
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Database error: %v", err)
+	}
+
+	// เช็คว่าเป็นเจ้าของ reservation จริงไหม
+	if owner != username {
+		return &pb.CancelReservationResponse{
+			Success: false,
+			Message: "Unauthorized",
+		}, nil
+	}
+
+	// ลบ reservation
+	_, err = db.Exec(
+		"DELETE FROM reservations WHERE id = ?",
+		req.ReservationId,
+	)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Cannot cancel reservation")
+	}
+
+	return &pb.CancelReservationResponse{
+		Success: true,
+		Message: "Reservation cancelled successfully",
+	}, nil
 }
