@@ -221,7 +221,6 @@ func (s *server) CancelReservation(ctx context.Context, req *pb.CancelReservatio
 		return nil, status.Errorf(codes.FailedPrecondition, "รายการจองนี้ถูกยกเลิกไปก่อนหน้านี้แล้ว")
 	}
 
-	// 5. [แก้ไข] เปลี่ยนจาก DELETE เป็นการ UPDATE สถานะแทนเพื่อไม่ให้ประวัติหาย
 	_, err = db.Exec(
 		"UPDATE reservations SET status = 'cancelled' WHERE id = ?",
 		req.ReservationId,
