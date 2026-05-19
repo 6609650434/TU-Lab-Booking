@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -185,100 +186,86 @@ func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleReq
 
 // ฟังก์ชันสำหรับจองห้อง
 func (s *server) CreateReservation(ctx context.Context, req *pb.ReservationRequest) (*pb.ReservationResponse, error) {
-
-	// ดึง username จาก JWT Token
-	usernameValue := ctx.Value("username")
-	if usernameValue == nil {
-		return nil, status.Errorf(
-			codes.Unauthenticated,
-			"ไม่พบข้อมูลผู้ใช้งานจาก Token",
-		)
+	// 1. ดึง username และ role จาก JWT Token
+	username, okUsername := ctx.Value("username").(string)
+	role, okRole := ctx.Value("user_role").(string)
+	if !okUsername || username == "" || !okRole || role == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "ข้อมูลผู้ใช้งานจาก Token ไม่ถูกต้อง")
 	}
 
-	username, ok := usernameValue.(string)
-	if !ok || username == "" {
-		return nil, status.Errorf(
-			codes.Unauthenticated,
-			"ข้อมูลผู้ใช้งานจาก Token ไม่ถูกต้อง",
-		)
+	// 2. ตรวจสอบข้อมูลพื้นฐาน (แก้ไขบั๊กสตริง RoomId)
+	if req.RoomId == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "กรุณาระบุ room_id")
+	}
+	if req.Date == "" || req.TimeSlot == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "กรุณาระบุ date และ time_slot")
 	}
 
-	// ตรวจสอบข้อมูลที่ส่งเข้ามา
-	if req.RoomId <= 0 {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			"กรุณาระบุ room_id ให้ถูกต้อง",
-		)
+	// 3. ตรวจสอบเงื่อนไขเวลา: จองล่วงหน้าไม่เกิน 7 วัน
+	parsedDate, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "รูปแบบวันที่ไม่ถูกต้อง ควรเป็น YYYY-MM-DD")
 	}
 
-	if req.Date == "" {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			"กรุณาระบุ date",
-		)
+	// หาส่วนต่างของวัน (นับจากเวลาปัจจุบัน)
+	now := time.Now().Truncate(24 * time.Hour)
+	daysAhead := parsedDate.Sub(now).Hours() / 24
+	if daysAhead < 0 || daysAhead > 7 {
+		return nil, status.Errorf(codes.InvalidArgument, "สามารถจองล่วงหน้าได้ไม่เกิน 7 วัน")
 	}
 
-	if req.TimeSlot == "" {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			"กรุณาระบุ time_slot",
-		)
+	// 4. กำหนดจำนวนเครื่องที่จะจองตามสิทธิ์ (Role-based Rules)
+	var seatsToBook int
+	var note string
+
+	if role == "student" {
+		seatsToBook = 1 // นักศึกษาจองได้ทีละ 1 เครื่อง
+	} else if role == "teacher" {
+		seatsToBook = 100 // อาจารย์จองทั้งห้อง (100 เครื่อง)
+		// ในระบบจริง ควรส่งค่า note เพิ่มเข้ามาผ่าน proto ด้วยครับ แต่ตอนนี้ขอดึงค่าเบื้องต้นไว้ก่อน
+		note = "อาจารย์จองเพื่อการเรียนการสอน/สอบ"
+	} else {
+		return nil, status.Errorf(codes.PermissionDenied, "สิทธิ์ของคุณไม่สามารถทำการจองได้")
+	}
+	if seatsToBook <= 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "ระบบไม่สามารถระบุจำนวนเครื่องสำหรับบทบาทของคุณได้ (Role: %s)", role)
 	}
 
-	// เช็กว่าห้องถูกจองแล้วหรือยัง
-	var count int
-
-	err := db.QueryRow(
-		`SELECT COUNT(*)
-		 FROM reservations
-		 WHERE room_id = ?
-		 AND date = ?
-		 AND time_slot = ?`,
-		req.RoomId,
-		req.Date,
-		req.TimeSlot,
-	).Scan(&count)
+	// 5. ตรวจสอบจำนวนเครื่องที่ถูกจองไปแล้วในฐานข้อมูล (Capacity Check)
+	var currentBookedSeats sql.NullInt64
+	err = db.QueryRow(
+		`SELECT SUM(seats_count) 
+		 FROM reservations 
+		 WHERE room_id = ? AND date = ? AND time_slot = ? AND status != 'rejected'`,
+		req.RoomId, req.Date, req.TimeSlot,
+	).Scan(&currentBookedSeats)
 
 	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"database error: %v",
-			err,
-		)
+		return nil, status.Errorf(codes.Internal, "database error: %v", err)
 	}
 
-	// ถ้ามีการจองแล้ว
-	if count > 0 {
-		return nil, status.Errorf(
-			codes.AlreadyExists,
-			"ห้องถูกจองแล้ว",
-		)
+	// ถ้าผลรวมเครื่องบวกกับที่จะจองใหม่ เกินความจุสูงสุด (100 เครื่อง)
+	if currentBookedSeats.Int64+int64(seatsToBook) > 100 {
+		return nil, status.Errorf(codes.ResourceExhausted, "ขออภัย เครื่องคอมพิวเตอร์ในรอบเวลานี้เต็มแล้ว (คงเหลือ %d เครื่อง)", 100-currentBookedSeats.Int64)
 	}
 
-	// บันทึกข้อมูลลง database
-	_, err = db.Exec(
-		`INSERT INTO reservations
-		(room_id, user_id, date, time_slot)
-		VALUES (?, ?, ?, ?)`,
-		req.RoomId,
-		username,
-		req.Date,
-		req.TimeSlot,
+	// 6. บันทึกข้อมูลลง database พร้อมคอลัมน์ใหม่
+	result, err := db.Exec(
+		`INSERT INTO reservations (room_id, user_id, date, time_slot, seats_count, status, note)
+		 VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
+		req.RoomId, username, req.Date, req.TimeSlot, seatsToBook, note,
 	)
-
 	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"insert error: %v",
-			err,
-		)
+		return nil, status.Errorf(codes.Internal, "insert error: %v", err)
 	}
 
-	// ส่ง response กลับ
+	// ดึง ID ล่าสุดที่เพิ่ง Insert สำเร็จเพื่อส่งกลับไปให้หน้าบ้าน
+	lastInsertID, _ := result.LastInsertId()
+
 	return &pb.ReservationResponse{
-		ReservationId: "RESERVED",
+		ReservationId: fmt.Sprintf("%d", lastInsertID),
 		Status:        "pending",
-		Message:       "จองห้องสำเร็จ",
+		Message:       "ส่งคำขอจองสำเร็จ อยู่ระหว่างรอเจ้าหน้าที่อนุมัติ",
 	}, nil
 }
 
