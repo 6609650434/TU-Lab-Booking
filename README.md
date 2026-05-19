@@ -4,7 +4,7 @@
 3. ดูตารางการใช้งานของห้องตามวันและรอบเวลา - GET /api/rooms/{id}/schedule รับหน้าที่ พงศ์
 4. ส่งคำขอจองห้องหรือเครื่อง - POST /api/reservations รับหน้าที่ นอธ
 5. ดูประวัติการจองของตนเอง - GET /api/reservations/my รับหน้าที่ โดนัด
-6. ยกเลิกการจองของตนเอง - DELETE /api/reservations/{id} รับหน้าที่ บาส
+6. ยกเลิกการจองของตนเอง - PUT /api/reservations/{id}/cancel รับหน้าที่ บาส
 
 # TU Lab Booking System
 
