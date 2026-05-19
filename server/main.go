@@ -227,9 +227,6 @@ func (s *server) CreateReservation(ctx context.Context, req *pb.ReservationReque
 	} else {
 		return nil, status.Errorf(codes.PermissionDenied, "สิทธิ์ของคุณไม่สามารถทำการจองได้")
 	}
-	if seatsToBook <= 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "ระบบไม่สามารถระบุจำนวนเครื่องสำหรับบทบาทของคุณได้ (Role: %s)", role)
-	}
 
 	// 5. ตรวจสอบจำนวนเครื่องที่ถูกจองไปแล้วในฐานข้อมูล (Capacity Check)
 	var currentBookedSeats sql.NullInt64
@@ -266,6 +263,53 @@ func (s *server) CreateReservation(ctx context.Context, req *pb.ReservationReque
 		ReservationId: fmt.Sprintf("%d", lastInsertID),
 		Status:        "pending",
 		Message:       "ส่งคำขอจองสำเร็จ อยู่ระหว่างรอเจ้าหน้าที่อนุมัติ",
+	}, nil
+}
+
+// ฟังก์ชันดูประวัติการจองของตนเอง
+func (s *server) GetMyReservations(ctx context.Context, req *pb.Empty) (*pb.MyReservationsResponse, error) {
+	userID, ok := ctx.Value("username").(string)
+	if !ok || userID == "" {
+		return nil, status.Error(codes.Unauthenticated, "ไม่พบข้อมูลผู้ใช้จาก token")
+	}
+
+	rows, err := db.Query(`
+		SELECT id, room_id, date, time_slot, status
+		FROM reservations
+		WHERE user_id = ?
+		ORDER BY date DESC, time_slot ASC
+	`, userID)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "ไม่สามารถดึงประวัติการจองได้: %v", err)
+	}
+	defer rows.Close()
+
+	var reservations []*pb.MyReservation
+
+	for rows.Next() {
+		var id int
+		var roomID string
+		var date string
+		var timeSlot string
+		var reservationStatus string
+
+		err := rows.Scan(&id, &roomID, &date, &timeSlot, &reservationStatus)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "อ่านข้อมูลประวัติการจองผิดพลาด: %v", err)
+		}
+
+		reservations = append(reservations, &pb.MyReservation{
+			ReservationId: fmt.Sprintf("%d", id),
+			RoomId:        roomID,
+			Date:          date,
+			TimeSlot:      timeSlot,
+			Status:        reservationStatus,
+		})
+	}
+
+	return &pb.MyReservationsResponse{
+		Reservations: reservations,
 	}, nil
 }
 

@@ -53,6 +53,19 @@ message RoomScheduleResponse {
   repeated ScheduleSlot slots = 3;
 }
 
+// ดูประวัติการจองของตนเอง
+message MyReservation {
+  string reservation_id = 1;
+  string room_id = 2;
+  string date = 3;
+  string time_slot = 4;
+  string status = 5;
+}
+
+message MyReservationsResponse {
+  repeated MyReservation reservations = 1;
+}
+
 // 2. กำหนดบริการ (Service) หรือ API Endpoint
 service BookingService {
   // นี่คือตัวแทนของ POST /api/auth/login
@@ -64,6 +77,9 @@ service BookingService {
   rpc CreateReservation (ReservationRequest) returns (ReservationResponse);
 
   rpc GetRoomSchedule (GetRoomScheduleRequest) returns (RoomScheduleResponse);
+
+  // เทียบเท่า GET /api/reservations/my
+  rpc GetMyReservations (Empty) returns (MyReservationsResponse);
 }
 
 message Empty {}
@@ -71,3 +87,4 @@ message RoomList {
   repeated Room rooms = 1;
 
 }
+
