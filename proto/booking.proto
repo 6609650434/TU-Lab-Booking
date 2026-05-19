@@ -14,18 +14,20 @@ message Room {
 
 message ReservationRequest {
   string room_id = 1;
-  string user_id = 2;
-  string time_slot = 3; // เช่น "09:30-11:00"
-  string date = 4;      // จองล่วงหน้าไม่เกิน 7 วัน
+  string user_id = 2;   
+  string time_slot = 3;  // เช่น "09:30-11:00"
+  string date = 4;       // วันที่ต้องการจองล่วงหน้าไม่เกิน 7 วัน (YYYY-MM-DD)
+  int32 seats_count = 5; // จำนวนเครื่องที่ต้องการจอง (นักศึกษา = 1, อาจารย์ = 100)
+  string note = 6;       // หมายเหตุ (จำเป็นต้องระบุในกรณีที่เป็นอาจารย์)
 }
 
 message ReservationResponse {
   string reservation_id = 1;
-  string status = 2;    // "pending" ตามกฎของคุณ [cite: 7, 8]
+  string status = 2;     // "pending" รอเจ้าหน้าที่อนุมัติ
   string message = 3;
 }
 
-//login
+// Login
 message LoginRequest {
   string username = 1;
   string password = 2;
@@ -33,18 +35,20 @@ message LoginRequest {
 
 message LoginResponse {
   string access_token = 1;
-  string role = 2; // "student", "teacher", หรือ "staff" ตามที่ออกแบบไว้
+  string role = 2;       // "student", "teacher", หรือ "staff"
 }
 
+// ดูตารางเวลาของห้อง
 message GetRoomScheduleRequest {
   string room_id = 1;
-  string date = 2; // format: "2026-05-08"
+  string date = 2;       // รูปแบบ: "2026-05-20"
 }
 
 message ScheduleSlot {
   string time_slot = 1;
-  string status = 2;    // "available" หรือ "booked"
-  string booked_by = 3; // user_id ถ้า booked, ว่างถ้า available
+  string status = 2;         // "available" หรือ "full" (ถ้าจองครบ 100 เครื่องจะขึ้น full)
+  string booked_by = 3;      // แสดงชื่ออาจารย์และกิจกรรม (ถ้าคนเรียกดูเป็นอาจารย์)
+  int32 available_seats = 4; // จำนวนเครื่องที่ยังว่างอยู่ (0 ถึง 100)
 }
 
 message RoomScheduleResponse {
@@ -53,21 +57,23 @@ message RoomScheduleResponse {
   repeated ScheduleSlot slots = 3;
 }
 
+message Empty {}
+
+message RoomList {
+  repeated Room rooms = 1;
+}
+
 // 2. กำหนดบริการ (Service) หรือ API Endpoint
 service BookingService {
-  // นี่คือตัวแทนของ POST /api/auth/login
+  // เทียบเท่า POST /api/auth/login
   rpc Login (LoginRequest) returns (LoginResponse); 
+  
   // เทียบเท่า GET /api/rooms
   rpc GetRooms (Empty) returns (RoomList);
   
   // เทียบเท่า POST /api/reservations
   rpc CreateReservation (ReservationRequest) returns (ReservationResponse);
 
+  // เทียบเท่า GET /api/rooms/{id}/schedule
   rpc GetRoomSchedule (GetRoomScheduleRequest) returns (RoomScheduleResponse);
-}
-
-message Empty {}
-message RoomList {
-  repeated Room rooms = 1;
-
 }

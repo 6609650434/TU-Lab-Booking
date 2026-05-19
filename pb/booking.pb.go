@@ -86,8 +86,10 @@ type ReservationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RoomId        string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	TimeSlot      string                 `protobuf:"bytes,3,opt,name=time_slot,json=timeSlot,proto3" json:"time_slot,omitempty"` // เช่น "09:30-11:00"
-	Date          string                 `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`                         // จองล่วงหน้าไม่เกิน 7 วัน
+	TimeSlot      string                 `protobuf:"bytes,3,opt,name=time_slot,json=timeSlot,proto3" json:"time_slot,omitempty"`        // เช่น "09:30-11:00"
+	Date          string                 `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`                                // วันที่ต้องการจองล่วงหน้าไม่เกิน 7 วัน (YYYY-MM-DD)
+	SeatsCount    int32                  `protobuf:"varint,5,opt,name=seats_count,json=seatsCount,proto3" json:"seats_count,omitempty"` // จำนวนเครื่องที่ต้องการจอง (นักศึกษา = 1, อาจารย์ = 100)
+	Note          string                 `protobuf:"bytes,6,opt,name=note,proto3" json:"note,omitempty"`                                // หมายเหตุ (จำเป็นต้องระบุในกรณีที่เป็นอาจารย์)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -150,10 +152,24 @@ func (x *ReservationRequest) GetDate() string {
 	return ""
 }
 
+func (x *ReservationRequest) GetSeatsCount() int32 {
+	if x != nil {
+		return x.SeatsCount
+	}
+	return 0
+}
+
+func (x *ReservationRequest) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
+}
+
 type ReservationResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ReservationId string                 `protobuf:"bytes,1,opt,name=reservation_id,json=reservationId,proto3" json:"reservation_id,omitempty"`
-	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"` // "pending" ตามกฎของคุณ [cite: 7, 8]
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"` // "pending" รอเจ้าหน้าที่อนุมัติ
 	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -210,7 +226,7 @@ func (x *ReservationResponse) GetMessage() string {
 	return ""
 }
 
-// login
+// Login
 type LoginRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
@@ -266,7 +282,7 @@ func (x *LoginRequest) GetPassword() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	Role          string                 `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"` // "student", "teacher", หรือ "staff" ตามที่ออกแบบไว้
+	Role          string                 `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"` // "student", "teacher", หรือ "staff"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -315,10 +331,11 @@ func (x *LoginResponse) GetRole() string {
 	return ""
 }
 
+// ดูตารางเวลาของห้อง
 type GetRoomScheduleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RoomId        string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
-	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"` // format: "2026-05-08"
+	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"` // รูปแบบ: "2026-05-20"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -368,12 +385,13 @@ func (x *GetRoomScheduleRequest) GetDate() string {
 }
 
 type ScheduleSlot struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TimeSlot      string                 `protobuf:"bytes,1,opt,name=time_slot,json=timeSlot,proto3" json:"time_slot,omitempty"`
-	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                     // "available" หรือ "booked"
-	BookedBy      string                 `protobuf:"bytes,3,opt,name=booked_by,json=bookedBy,proto3" json:"booked_by,omitempty"` // user_id ถ้า booked, ว่างถ้า available
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TimeSlot       string                 `protobuf:"bytes,1,opt,name=time_slot,json=timeSlot,proto3" json:"time_slot,omitempty"`
+	Status         string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`                                        // "available" หรือ "full" (ถ้าจองครบ 100 เครื่องจะขึ้น full)
+	BookedBy       string                 `protobuf:"bytes,3,opt,name=booked_by,json=bookedBy,proto3" json:"booked_by,omitempty"`                    // แสดงชื่ออาจารย์และกิจกรรม (ถ้าคนเรียกดูเป็นอาจารย์)
+	AvailableSeats int32                  `protobuf:"varint,4,opt,name=available_seats,json=availableSeats,proto3" json:"available_seats,omitempty"` // จำนวนเครื่องที่ยังว่างอยู่ (0 ถึง 100)
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ScheduleSlot) Reset() {
@@ -425,6 +443,13 @@ func (x *ScheduleSlot) GetBookedBy() string {
 		return x.BookedBy
 	}
 	return ""
+}
+
+func (x *ScheduleSlot) GetAvailableSeats() int32 {
+	if x != nil {
+		return x.AvailableSeats
+	}
+	return 0
 }
 
 type RoomScheduleResponse struct {
@@ -575,12 +600,15 @@ const file_proto_booking_proto_rawDesc = "" +
 	"\x04Room\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
-	"\bcapacity\x18\x03 \x01(\x05R\bcapacity\"w\n" +
+	"\bcapacity\x18\x03 \x01(\x05R\bcapacity\"\xac\x01\n" +
 	"\x12ReservationRequest\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1b\n" +
 	"\ttime_slot\x18\x03 \x01(\tR\btimeSlot\x12\x12\n" +
-	"\x04date\x18\x04 \x01(\tR\x04date\"n\n" +
+	"\x04date\x18\x04 \x01(\tR\x04date\x12\x1f\n" +
+	"\vseats_count\x18\x05 \x01(\x05R\n" +
+	"seatsCount\x12\x12\n" +
+	"\x04note\x18\x06 \x01(\tR\x04note\"n\n" +
 	"\x13ReservationResponse\x12%\n" +
 	"\x0ereservation_id\x18\x01 \x01(\tR\rreservationId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x18\n" +
@@ -593,11 +621,12 @@ const file_proto_booking_proto_rawDesc = "" +
 	"\x04role\x18\x02 \x01(\tR\x04role\"E\n" +
 	"\x16GetRoomScheduleRequest\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x12\n" +
-	"\x04date\x18\x02 \x01(\tR\x04date\"`\n" +
+	"\x04date\x18\x02 \x01(\tR\x04date\"\x89\x01\n" +
 	"\fScheduleSlot\x12\x1b\n" +
 	"\ttime_slot\x18\x01 \x01(\tR\btimeSlot\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1b\n" +
-	"\tbooked_by\x18\x03 \x01(\tR\bbookedBy\"p\n" +
+	"\tbooked_by\x18\x03 \x01(\tR\bbookedBy\x12'\n" +
+	"\x0favailable_seats\x18\x04 \x01(\x05R\x0eavailableSeats\"p\n" +
 	"\x14RoomScheduleResponse\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x12\n" +
 	"\x04date\x18\x02 \x01(\tR\x04date\x12+\n" +

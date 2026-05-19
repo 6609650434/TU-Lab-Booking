@@ -31,12 +31,13 @@ const (
 //
 // 2. กำหนดบริการ (Service) หรือ API Endpoint
 type BookingServiceClient interface {
-	// นี่คือตัวแทนของ POST /api/auth/login
+	// เทียบเท่า POST /api/auth/login
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	// เทียบเท่า GET /api/rooms
 	GetRooms(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RoomList, error)
 	// เทียบเท่า POST /api/reservations
 	CreateReservation(ctx context.Context, in *ReservationRequest, opts ...grpc.CallOption) (*ReservationResponse, error)
+	// เทียบเท่า GET /api/rooms/{id}/schedule
 	GetRoomSchedule(ctx context.Context, in *GetRoomScheduleRequest, opts ...grpc.CallOption) (*RoomScheduleResponse, error)
 }
 
@@ -94,12 +95,13 @@ func (c *bookingServiceClient) GetRoomSchedule(ctx context.Context, in *GetRoomS
 //
 // 2. กำหนดบริการ (Service) หรือ API Endpoint
 type BookingServiceServer interface {
-	// นี่คือตัวแทนของ POST /api/auth/login
+	// เทียบเท่า POST /api/auth/login
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	// เทียบเท่า GET /api/rooms
 	GetRooms(context.Context, *Empty) (*RoomList, error)
 	// เทียบเท่า POST /api/reservations
 	CreateReservation(context.Context, *ReservationRequest) (*ReservationResponse, error)
+	// เทียบเท่า GET /api/rooms/{id}/schedule
 	GetRoomSchedule(context.Context, *GetRoomScheduleRequest) (*RoomScheduleResponse, error)
 	mustEmbedUnimplementedBookingServiceServer()
 }

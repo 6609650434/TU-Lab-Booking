@@ -126,7 +126,7 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 	}, nil
 }
 
-//ฟังก์ชันดึงข้อมูลของห้องมา
+// ฟังก์ชันดึงข้อมูลของห้องมา
 func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleRequest) (*pb.RoomScheduleResponse, error) {
 	// กำหนด time slots ทั้งหมดที่มีในระบบ
 	allSlots := []string{
@@ -180,6 +180,33 @@ func (s *server) GetRoomSchedule(ctx context.Context, req *pb.GetRoomScheduleReq
 		RoomId: req.RoomId,
 		Date:   req.Date,
 		Slots:  slots,
+	}, nil
+}
+
+// ฟังก์ชันแสดงรายการห้อง Lab ทั้งหมด (เทียบเท่า GET /api/rooms)
+func (s *server) GetRooms(ctx context.Context, req *pb.Empty) (*pb.RoomList, error) {
+	// 1. Query ดึงข้อมูลห้องทั้งหมดจากตาราง rooms
+	rows, err := db.Query("SELECT id, name, capacity FROM rooms")
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "ไม่สามารถดึงข้อมูลห้องได้: %v", err)
+	}
+	defer rows.Close()
+
+	var rooms []*pb.Room
+
+	// 2. วนลูปอ่านข้อมูลทีละแถวเพื่อใส่เข้าไปใน List
+	for rows.Next() {
+		var r pb.Room
+		err := rows.Scan(&r.Id, &r.Name, &r.Capacity)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "เกิดข้อผิดพลาดในการอ่านข้อมูลห้อง: %v", err)
+		}
+		rooms = append(rooms, &r)
+	}
+
+	// 3. ส่งข้อมูลกลับไปในรูปแบบ RoomList
+	return &pb.RoomList{
+		Rooms: rooms,
 	}, nil
 }
 
