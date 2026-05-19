@@ -67,7 +67,7 @@ TU Lab Booking System เป็นระบบจองห้องปฏิบ�
 | Room Schedule | `GET /api/rooms/{id}/schedule` | ดูตารางการใช้งานของห้อง |
 | Create Reservation | `POST /api/reservations` | ส่งคำขอจองห้องหรือเครื่อง |
 | My Reservations | `GET /api/reservations/my` | ดูประวัติการจองของตนเอง |
-| Cancel Reservation | `DELETE /api/reservations/{id}` | ยกเลิกการจองของตนเอง |
+| Cancel Reservation | `PUT /api/reservations/{id}/cancel` | ยกเลิกการจองของตนเอง |
 
 ---
 
