@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"database/sql"
-	"tu-lab-booking/pb" // ตรวจสอบว่าชื่อ module ตรงกับใน go.mod ของคุณ
+	"tu-lab-booking/pb" // ตรวจสอบว่าชื่อ module ตรงกับใน go.mod
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
