@@ -72,6 +72,7 @@ func initDB() {
 		log.Fatal(err)
 	}
 
+	// 5. [เพิ่มใหม่] เรียกฟังก์ชันใส่ข้อมูลเริ่มต้นสำหรับทดสอบระบบ
 	setupInitialData()
 }
 
