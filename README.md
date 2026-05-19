@@ -1,88 +1,159 @@
+# TU Lab Booking — ระบบจองห้องปฏิบัติการคอมพิวเตอร์
+
+ระบบสำหรับนักศึกษาและอาจารย์จองห้องปฏิบัติการคอมพิวเตอร์ของสาขาวิชาคอมพิวเตอร์ผ่านเว็บไซต์ โดยสามารถตรวจสอบตารางการใช้งานแบบ Real-time เลือกรอบเวลาที่ต้องการ และส่งคำขอจองผ่านระบบได้โดยตรง
+
+---
+
 ## Feature ของระบบ
-1. เข้าสู่ระบบ - POST /api/auth/login รับหน้าที่ ทีม
-2. แสดงรายการห้อง Lab ทั้งหมด - GET  /api/rooms รับหน้าที่ ทีม
-3. ดูตารางการใช้งานของห้องตามวันและรอบเวลา - GET /api/rooms/{id}/schedule รับหน้าที่ พงศ์
-4. ส่งคำขอจองห้องหรือเครื่อง - POST /api/reservations รับหน้าที่ นอธ
-5. ดูประวัติการจองของตนเอง - GET /api/reservations/my รับหน้าที่ โดนัด
-6. ยกเลิกการจองของตนเอง - PUT /api/reservations/{id}/cancel รับหน้าที่ บาส
 
-# TU Lab Booking System
+ระบบพัฒนาในรูปแบบ **gRPC** ไม่ได้ใช้ HTTP Method โดยตรง แต่เรียกผ่าน RPC Method ที่กำหนดไว้ในไฟล์ `.proto`
 
-## System Overview
-
-TU Lab Booking System เป็นระบบจองห้องปฏิบัติการคอมพิวเตอร์ผ่านเว็บไซต์ สำหรับนักศึกษา อาจารย์ และเจ้าหน้าที่ภายในสาขาวิชาคอมพิวเตอร์ โดยพัฒนาขึ้นในรูปแบบ RESTful API เพื่อช่วยให้ผู้ใช้งานสามารถตรวจสอบตารางการใช้งานห้องแบบ Real-time เลือกรอบเวลาที่ต้องการ และส่งคำขอจองผ่านระบบได้โดยตรง
-
-ระบบมีการกำหนดสิทธิ์การใช้งานตามบทบาทของผู้ใช้ (Role-based Access Control) เพื่อควบคุมเงื่อนไขการจองให้เหมาะสมกับผู้ใช้งานแต่ละประเภท และช่วยลดปัญหาการจองซ้ำซ้อนหรือความผิดพลาดในการจัดการตารางห้องปฏิบัติการ
-
----
-
-## Problem Solving
-
-ระบบถูกพัฒนาขึ้นเพื่อแก้ปัญหาดังต่อไปนี้:
-
-- ลดขั้นตอนการติดต่อเจ้าหน้าที่
-- ลดความซ้ำซ้อนในการจอง
-- แสดงตารางการใช้งานแบบ Real-time
-- ลดภาระของเจ้าหน้าที่ในการจัดการตาราง
-
----
-
-## System Scope
-
-- แสดงรายการห้องปฏิบัติการทั้งหมด (3 ห้อง)
-- แสดงตารางการใช้งานแบบ Real-time
-- จำกัดสิทธิ์การจองตามบทบาทของผู้ใช้
-- แสดงรายละเอียดการจองแตกต่างกันตาม Role
-- จองล่วงหน้าได้ไม่เกิน 7 วัน
-- เจ้าหน้าที่สามารถอนุมัติหรือปฏิเสธคำขอได้
-- รองรับการปักหมุดห้องที่สนใจและแจ้งเตือนทาง Email เมื่อห้องว่าง
-
----
-
-## User Roles
-
-### Student
-- จองได้ 1 เครื่อง
-- จองได้สูงสุด 1 ชั่วโมง 30 นาที
-- จองล่วงหน้าได้ไม่เกิน 7 วัน
-
-### Lecturer
-- จองได้ทั้งห้อง (100 เครื่อง)
-- จองได้สูงสุด 3 ชั่วโมง
-- ต้องระบุรายละเอียดกิจกรรมหรือรายวิชา
-
-### Staff
-- อนุมัติหรือปฏิเสธคำขอจอง
-- ดูข้อมูลการจองทั้งหมด
-- จัดการข้อมูลห้องปฏิบัติการ
-
----
-
-## Features
-
-| Feature | API Endpoint | Description |
+| Feature | gRPC Method | รับหน้าที่ |
 |---|---|---|
-| Login | `POST /api/auth/login` | เข้าสู่ระบบและตรวจสอบสิทธิ์ผู้ใช้ |
-| Get Rooms | `GET /api/rooms` | ดึงข้อมูลห้องปฏิบัติการทั้งหมด |
-| Room Schedule | `GET /api/rooms/{id}/schedule` | ดูตารางการใช้งานของห้อง |
-| Create Reservation | `POST /api/reservations` | ส่งคำขอจองห้องหรือเครื่อง |
-| My Reservations | `GET /api/reservations/my` | ดูประวัติการจองของตนเอง |
-| Cancel Reservation | `PUT /api/reservations/{id}/cancel` | ยกเลิกการจองของตนเอง |
+| เข้าสู่ระบบ | `BookingService.Login` | ทีม |
+| แสดงรายการห้อง Lab ทั้งหมด | `BookingService.GetRooms` | ทีม |
+| ดูตารางการใช้งานของห้อง | `BookingService.GetRoomSchedule` | พงศ์ |
+| ส่งคำขอจองห้องหรือเครื่อง | `BookingService.CreateReservation` | นอธ |
+| ดูประวัติการจองของตนเอง | `BookingService.GetMyReservations` | โดนัด |
+| ยกเลิกการจองของตนเอง | `BookingService.CancelReservation` | บาส |
 
 ---
 
-## Technologies Used
+## ผู้ใช้งานในระบบ
 
-- RESTful API
-- JWT Authentication
-- Database
-- Docker
-- GitHub Workflow
+| Role | สิทธิ์การจอง |
+|---|---|
+| `student` | จองได้ 1 เครื่อง ต่อ 1 รอบเวลา จองล่วงหน้าได้ไม่เกิน 7 วัน |
+| `teacher` | จองทั้งห้อง (100 เครื่อง) จองล่วงหน้าได้ไม่เกิน 7 วัน |
+| `staff` | อนุมัติ/ปฏิเสธคำขอจอง ดูตารางการจองทั้งหมด |
 
 ---
 
-## System Workflow
+## Tech Stack
 
-ผู้ใช้งานต้องเข้าสู่ระบบก่อนใช้งานฟังก์ชันหลักของระบบ หลังจากเข้าสู่ระบบแล้ว ผู้ใช้สามารถดูรายการห้องปฏิบัติการ ตรวจสอบตารางการใช้งาน ส่งคำขอจอง ดูประวัติการจอง และยกเลิกการจองของตนเองได้
+- **Language:** Go
+- **Protocol:** gRPC
+- **Database:** SQLite
+- **Authentication:** JWT (HS256)
+- **Container:** Docker
 
-ระบบใช้ JWT Authentication เพื่อยืนยันตัวตนของผู้ใช้งานก่อนเข้าถึง API ที่เกี่ยวข้องกับข้อมูลการจอง โดยผู้ใช้สามารถจัดการเฉพาะข้อมูลของตนเองเท่านั้น
+---
+
+## การติดตั้งและรันระบบ
+
+### Prerequisites
+- Go 1.25+
+- GCC (สำหรับ go-sqlite3)
+- Docker Desktop (ถ้าต้องการรันผ่าน Docker)
+
+---
+
+### วิธีที่ 1 — รันโดยตรง
+
+**1. Clone repository**
+```bash
+git clone <repository-url>
+cd TU-Lab-Booking
+```
+
+**2. ติดตั้ง dependencies**
+```bash
+go mod download
+```
+
+**3. รัน server**
+```bash
+go run ./server
+```
+
+Server จะรันที่ `localhost:50051`
+
+---
+
+### วิธีที่ 2 — รันผ่าน Docker
+
+**1. Pull image จาก DockerHub**
+```bash
+docker pull puttipong6609650541/tu-lab-booking:latest
+```
+
+**2. รัน container**
+```bash
+docker run -p 50051:50051 puttipong6609650541/tu-lab-booking:latest
+```
+
+**หรือใช้ docker-compose**
+```bash
+docker-compose up
+```
+
+---
+
+### วิธีที่ 3 — Build Docker Image เอง
+
+```bash
+docker-compose up --build
+```
+
+---
+
+## การทดสอบระบบ
+
+### Unit Test
+
+```bash
+cd server
+go test -coverprofile="coverage.out" .
+go tool cover -func "coverage.out"
+```
+
+ผลลัพธ์: **coverage 84.5%** (เกินกว่า 80% ที่กำหนด)
+
+### API Testing (Postman)
+
+1. เปิด Postman → **New** → เลือก **gRPC**
+2. ใส่ URL: `localhost:50051`
+3. Import proto file: `proto/booking.proto`
+4. เลือก method ที่ต้องการทดสอบ
+5. ใส่ Token ใน **Metadata** → key: `authorization`
+
+**ข้อมูลสำหรับทดสอบ**
+
+| Username | Password | Role |
+|---|---|---|
+| `student001` | `password123` | student |
+| `teacher001` | `password123` | teacher |
+| `staff001` | `password123` | staff |
+
+---
+
+## Database Schema
+
+ระบบใช้ **SQLite** และสร้างตารางอัตโนมัติตอน server start
+
+| ตาราง | คำอธิบาย |
+|---|---|
+| `users` | เก็บข้อมูลผู้ใช้งานและ role |
+| `rooms` | เก็บข้อมูลห้องปฏิบัติการ 3 ห้อง (LAB701, LAB702, LAB703) |
+| `reservations` | เก็บข้อมูลการจอง |
+| `pinned_rooms` | เก็บข้อมูลการปักหมุดแจ้งเตือน |
+
+---
+
+## Docker Image
+
+สามารถดึง image มารันได้ที่ DockerHub โดยใช้คำสั่ง: `puttipong6609650541/tu-lab-booking:latest` 
+
+```bash
+docker pull puttipong6609650541/tu-lab-booking:latest
+```
+
+---
+
+## Git Workflow
+
+```
+main          — version สุดท้ายของโครงงาน
+develop       — รวมงานจากทุก feature
+feature/*     — พัฒนาแต่ละ feature
+```
