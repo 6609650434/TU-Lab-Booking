@@ -8,6 +8,7 @@ package pb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -253,8 +254,7 @@ func _BookingService_GetMyReservations_Handler(srv interface{}, ctx context.Cont
 }
 
 // BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
+// It's only intended for direct use with grpc.RegisterService,and not to be introspected or modified (even as a copy)
 var BookingService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "booking.BookingService",
 	HandlerType: (*BookingServiceServer)(nil),
