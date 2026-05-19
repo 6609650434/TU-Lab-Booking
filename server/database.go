@@ -12,7 +12,7 @@ var db *sql.DB
 
 func initDB() {
 	var err error
-	// สร้างไฟล์ชื่อ tu_lab.db (SQLite จะสร้างให้เองถ้ายังไม่มี)
+	// สร้างไฟล์ชื่อ tu_lab.db (SQLite จะสร้างให้เอง ถ้ายังไม่มี)
 	db, err = sql.Open("sqlite3", "./tu_lab.db")
 	if err != nil {
 		log.Fatal(err)

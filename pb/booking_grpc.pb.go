@@ -218,8 +218,7 @@ func _BookingService_GetRoomSchedule_Handler(srv interface{}, ctx context.Contex
 }
 
 // BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
+// It's only intended for direct use with grpc.RegisterService,and not to be introspected or modified (even as a copy)
 var BookingService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "booking.BookingService",
 	HandlerType: (*BookingServiceServer)(nil),
