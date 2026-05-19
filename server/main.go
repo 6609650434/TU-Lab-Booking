@@ -313,6 +313,59 @@ func (s *server) GetMyReservations(ctx context.Context, req *pb.Empty) (*pb.MyRe
 	}, nil
 }
 
+func (s *server) CancelReservation(ctx context.Context, req *pb.CancelReservationRequest) (*pb.CancelReservationResponse, error) {
+	// 1. ดึง username จาก JWT Token อย่างปลอดภัย ป้องกันแอป Panic
+	username, ok := ctx.Value("username").(string)
+	if !ok || username == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "ข้อมูลผู้ใช้งานจาก Token ไม่ถูกต้อง")
+	}
+
+	// ตรวจสอบว่าส่ง ID รายการที่จะยกเลิกมาหรือไม่
+	if req.ReservationId == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "กรุณาระบุ ReservationId")
+	}
+
+	var owner string
+	var currentStatus string
+
+	// 2. ดึงข้อมูล user_id และ status ปัจจุบันมาตรวจสอบก่อน
+	err := db.QueryRow(
+		"SELECT user_id, status FROM reservations WHERE id = ?",
+		req.ReservationId,
+	).Scan(&owner, &currentStatus)
+
+	if err == sql.ErrNoRows {
+		return nil, status.Errorf(codes.NotFound, "ไม่พบรายการจองนี้ในระบบ")
+	}
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Database error: %v", err)
+	}
+
+	// 3. ตรวจสอบสิทธิ์: ต้องเป็นเจ้าของรายการจองนี้เท่านั้นถึงจะยกเลิกได้
+	if owner != username {
+		return nil, status.Errorf(codes.PermissionDenied, "คุณไม่มีสิทธิ์ยกเลิกรายการจองของผู้อื่น")
+	}
+
+	// 4. (เสริม) เช็คว่ารายการนี้เคยถูกยกเลิก หรือเจ้าหน้าที่ปฏิเสธไปแล้วหรือยัง
+	if currentStatus == "cancelled" {
+		return nil, status.Errorf(codes.FailedPrecondition, "รายการจองนี้ถูกยกเลิกไปก่อนหน้านี้แล้ว")
+	}
+
+	_, err = db.Exec(
+		"UPDATE reservations SET status = 'cancelled' WHERE id = ?",
+		req.ReservationId,
+	)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "ไม่สามารถยกเลิกการจองได้เนื่องจากระบบภายในมีปัญหา")
+	}
+
+	return &pb.CancelReservationResponse{
+		Success: true,
+		Message: "ยกเลิกรายการจองของคุณเรียบร้อยแล้ว",
+	}, nil
+}
+
 func main() {
 	// --- ส่วนที่เพิ่มเข้ามา ---
 	// เรียกใช้ฟังก์ชันเชื่อมต่อ Database จากไฟล์ database.go
