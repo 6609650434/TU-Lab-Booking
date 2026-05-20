@@ -157,3 +157,76 @@ main          — version สุดท้ายของโครงงาน
 develop       — รวมงานจากทุก feature
 feature/*     — พัฒนาแต่ละ feature
 ```
+---
+
+## ผลการทดสอบ API ผ่าน Postman
+
+ส่วนนี้แสดงผลการทดสอบระบบผ่านโปรแกรม Postman (gRPC) ทั้งในกรณีที่ทำงานสำเร็จตามเงื่อนไข (Success Cases) และกรณีที่ระบบตรวจดักจับข้อผิดพลาดตามเงื่อนไขความปลอดภัยและสิทธิ์ (Error Cases)
+
+### 1. ระบบยืนยันตัวตน (Authentication Service)
+* **เข้าสู่ระบบสำเร็จ (Success):**
+  ![Login](POSTMANTEST_Result/Login.PNG)
+* **กรณีรหัสผ่านไม่ถูกต้อง (Wrong Password):**
+  ![Login Wrong Password](POSTMANTEST_Result/Login_Wrong_Password.PNG)
+* **กรณีไม่พบชื่อผู้ใช้งานในระบบ (No Username in DB):**
+  ![Login No Username](POSTMANTEST_Result/Login_No_Username_in_dB.PNG)
+
+---
+
+### 2. ระบบเรียกดูข้อมูลห้องเเล็บ (Rooms Service)
+* **เรียกดูรายชื่อห้องเเล็บทั้งหมดสำเร็จ (Success):**
+  ![Get Rooms](POSTMANTEST_Result/Rooms.PNG)
+* **กรณีไม่ได้แนบ Access Token:**
+  ![Rooms No Access Token](POSTMANTEST_Result/Rooms_No_Access_token.PNG)
+* **กรณีแนบ Access Token ไม่ถูกต้องหรือหมดอายุ:**
+  ![Rooms Wrong Access Token](POSTMANTEST_Result/Rooms_Wrong_access_token.PNG)
+
+---
+
+### 3. ระบบตารางเวลาห้องเเล็บ (Room Schedule Service)
+* **เรียกดูตารางเวลาและความว่างสำเร็จ (Success):**
+  ![Get Room Schedule](POSTMANTEST_Result/GetRoomSchedule.PNG)
+* **กรณีไม่ได้แนบ Access Token:**
+  ![Get Room Schedule No Token](POSTMANTEST_Result/GetRoomSchedule_No_Access_Token.PNG)
+* **กรณีแนบ Access Token ไม่ถูกต้อง:**
+  ![Get Room Schedule Wrong Token](POSTMANTEST_Result/GetRoomSchedule_Wrong_Access_Token.PNG)
+
+---
+
+### 4. ระบบส่งคำขอจองห้องเเล็บ (Create Reservation Service)
+* **ส่งคำขอจองสำเร็จตามเงื่อนไข (Success):**
+  ![Create Reservation Success](POSTMANTEST_Result/CreateReservation.PNG)
+* **กรณีจองล่วงหน้าเกิน 7 วัน (ดักจับเงื่อนไขเวลา):**
+  ![Create Reservation More than 7 Days](POSTMANTEST_Result/CreateReservation_Morethan7days.PNG)
+* **รอบเวลาเต็ม ความจุเครื่องคอมพิวเตอร์ครบ 100 เครื่อง (Capacity Full):**
+  ![Create Reservation Full](POSTMANTEST_Result/CreateReservation_Full.PNG)
+* **กรณีไม่ได้แนบ Access Token:**
+  ![Create Reservation No Token](POSTMANTEST_Result/CreateReservation_No_Access_Token.PNG)
+* **กรณีแนบ Access Token ไม่ถูกต้อง:**
+  ![Create Reservation Wrong Token](POSTMANTEST_Result/CreateReservation_Wrong_Access_Token.PNG)
+
+---
+
+### 5. ระบบดูประวัติการจองของตนเอง (Get My Reservations Service)
+* **เรียกดูประวัติส่วนตัวสำเร็จ (Success):**
+  ![Get My Reservations Success](POSTMANTEST_Result/GetMyReservations.PNG)
+* **กรณีไม่ได้แนบ Access Token:**
+  ![Get My Reservations No Token](POSTMANTEST_Result/GetMyReservations_No_Access_Token.PNG)
+* **กรณีแนบ Access Token ไม่ถูกต้อง:**
+  ![Get My Reservations Wrong Token](POSTMANTEST_Result/GetMyReservations_Wrong_Access_Token.PNG)
+
+---
+
+### 6. ระบบยกเลิกการจองของตนเอง (Cancel Reservation Service)
+* **ยกเลิกรายการจองและอัปเดตสถานะสำเร็จ (Success):**
+  ![Cancel Reservation Success](POSTMANTEST_Result/CancelReservation.PNG)
+* **กรณีพยายามยกเลิกรายการจองที่เคยยกเลิกไปแล้ว (Duplicate Cancel):**
+  ![Cancel Reservation Duplicate](POSTMANTEST_Result/CancelReservation_Duplicate_Cancle.PNG)
+* **กรณีแอบไปยกเลิกรายการจองของผู้อื่น (Unauthorized / Owner Check):**
+  ![Cancel Reservation Others](POSTMANTEST_Result/CancelReservation_Cancel_Others_But_No_Access.PNG)
+* **กรณีระบุรหัสรายการจองไม่ถูกต้อง (Reservation Not Found):**
+  ![Cancel Reservation Not Found](POSTMANTEST_Result/CancelReservation_No_Reservation_In_DB.PNG)
+* **กรณีไม่ได้แนบ Access Token:**
+  ![Cancel Reservation No Token](POSTMANTEST_Result/CancelReservation_No_Access_Token.PNG)
+* **กรณีแนบ Access Token ไม่ถูกต้อง:**
+  ![Cancel Reservation Wrong Token](POSTMANTEST_Result/CancelReservation_Wrong_Access_Token.PNG)
