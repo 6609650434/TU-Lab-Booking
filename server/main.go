@@ -7,6 +7,7 @@ import (
 	"tu-lab-booking/pb" // ตรวจสอบว่าชื่อ module ตรงกับใน go.mod ของคุณ
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // 1. สร้าง Struct สำหรับ Server ให้ไฟล์อื่นเรียกใช้
@@ -31,6 +32,8 @@ func main() {
 	)
 
 	pb.RegisterBookingServiceServer(s, &server{})
+
+	reflection.Register(s)
 
 	log.Println("gRPC Server รันอยู่ที่พอร์ต :50051...")
 	if err := s.Serve(lis); err != nil {

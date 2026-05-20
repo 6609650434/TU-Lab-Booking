@@ -1,10 +1,14 @@
 syntax = "proto3";
-
 package booking;
-
-// กำหนดที่อยู่ของไฟล์ Go ที่จะถูกสร้างขึ้น
 option go_package = "./pb";
 
+// -------------------------------------------------------------
+// เพิ่มคำอธิบายรายละเอียดโปรเจคสำหรับแสดงบน Swagger UI 
+// -------------------------------------------------------------
+// ข้อมูลระบบ: TU Lab Booking API
+// คำอธิบาย: ระบบสำหรับให้นักศึกษาและอาจารย์จองห้องปฏิบัติการคอมพิวเตอร์
+// เวอร์ชัน: 1.0.0
+// -------------------------------------------------------------
 // 1. กำหนดโครงสร้างข้อมูล (Message)
 message Room {
   string id = 1;
@@ -93,7 +97,6 @@ service BookingService {
 
   rpc CancelReservation (CancelReservationRequest) returns (CancelReservationResponse);
 }
-
 
 message Empty {}
 message RoomList {
