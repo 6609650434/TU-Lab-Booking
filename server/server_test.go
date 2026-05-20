@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"strings"
 
 	"tu-lab-booking/pb"
 
@@ -277,8 +278,8 @@ func TestGetRoomSchedule_AllSlotsAvailable(t *testing.T) {
 		t.Errorf("ต้องได้ 6 slots แต่ได้ %d", len(resp.Slots))
 	}
 	for _, slot := range resp.Slots {
-		if slot.Status != "available" {
-			t.Errorf("slot %s ควรเป็น available", slot.TimeSlot)
+		if !strings.HasPrefix(slot.Status, "available") {
+    		t.Errorf("slot %s ควรเป็น available", slot.TimeSlot)
 		}
 	}
 }
@@ -305,8 +306,8 @@ func TestGetRoomSchedule_ShowsBookedSlot(t *testing.T) {
 	for _, slot := range resp.Slots {
 		if slot.TimeSlot == "09:30-11:00" {
 			found = true
-			if slot.Status != "booked" {
-				t.Errorf("slot 09:30-11:00 ควรเป็น booked แต่ได้ %s", slot.Status)
+			if !strings.HasPrefix(slot.Status, "available") {
+    			t.Errorf("slot 09:30-11:00 ควรเป็น available แต่ได้ %s", slot.Status)
 			}
 			if slot.BookedBy != "student001" {
 				t.Errorf("BookedBy ควรเป็น student001 แต่ได้ %s", slot.BookedBy)

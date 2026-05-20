@@ -99,9 +99,9 @@ func setupInitialData() {
 	// จำลองข้อมูลการจองในอดีตหรือปัจจุบัน (ตัวอย่างวันที่ 2026-05-20) เพื่อใช้เทสระบบดึงข้อมูล
 	// รายการที่ 1: นักศึกษาจองรอบแรก 1 เครื่อง (สถานะอนุมัติแล้ว -> ห้องจะเหลือ 99 เครื่อง)
 	db.Exec(`INSERT OR IGNORE INTO reservations (id, user_id, room_id, time_slot, date, seats_count, status, note) 
-		VALUES (1, 'student001', 'LAB701', '09:30–11:00', '2026-05-20', 1, 'approved', '')`)
+		VALUES (1, 'student001', 'LAB701', '09:30-11:00', '2026-05-20', 1, 'approved', '')`)
 
 	// รายการที่ 2: อาจารย์จองรอบสองทั้งห้อง 100 เครื่อง (สถานะอนุมัติแล้ว -> ห้องจะเต็ม 0 เครื่อง)
 	db.Exec(`INSERT OR IGNORE INTO reservations (id, user_id, room_id, time_slot, date, seats_count, status, note) 
-		VALUES (2, 'teacher001', 'LAB701', '11:00–12:30', '2026-05-20', 100, 'approved', 'สอนวิชา CS367')`)
+		VALUES (2, 'teacher001', 'LAB701', '11:00-12:30', '2026-05-20', 100, 'approved', 'สอนวิชา CS367')`)
 }
